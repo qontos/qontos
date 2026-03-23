@@ -14,12 +14,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Fetch doc checker
-        run: |
-          curl -sSf -o check-repo-docs.sh \
-            "https://raw.githubusercontent.com/qontos/.github/main/scripts/check-repo-docs.sh"
-          chmod +x check-repo-docs.sh
-
       - name: Run doc consistency check
-        run: bash check-repo-docs.sh .
+        run: bash .github/scripts/check-repo-docs.sh .
