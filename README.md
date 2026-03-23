@@ -1,31 +1,37 @@
 <div align="center">
+  <a href="https://github.com/qontos">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/qontos/.github/main/assets/qontos-logo-white.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/qontos/.github/main/assets/qontos-logo.png">
+      <img src="https://raw.githubusercontent.com/qontos/.github/main/assets/qontos-logo.png" alt="QONTOS" width="260">
+    </picture>
+  </a>
 
-<img src="assets/qontos-logo.png" alt="QONTOS" width="400">
+  <h3>QONTOS</h3>
+  <p><strong>Flagship SDK for the QONTOS hybrid superconducting-photonic platform.</strong></p>
+  <p>Modular quantum orchestration, partitioning, scheduling, and execution integrity for public and future native QONTOS systems.</p>
 
-<br>
+  <p>
+    <img src="https://img.shields.io/badge/Visibility-Public-0f766e?style=flat-square" alt="Visibility: Public">
+    <img src="https://img.shields.io/badge/Track-Flagship_SDK-0b3b8f?style=flat-square" alt="Track: Flagship SDK">
+    <img src="https://img.shields.io/badge/Status-Pre--release-c2410c?style=flat-square" alt="Status: Pre-release">
+    <a href="https://github.com/qontos/qontos/actions"><img src="https://img.shields.io/github/actions/workflow/status/qontos/qontos/ci.yml?branch=main&label=CI&logo=github&style=flat-square" alt="CI"></a>
+  </p>
 
-**Quantum Orchestrated Network for Transformative Optimization Systems**
-
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python](https://img.shields.io/badge/Python-3.10+-yellow.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![CI](https://img.shields.io/github/actions/workflow/status/qontos/qontos/ci.yml?branch=main&label=CI&logo=github)](https://github.com/qontos/qontos/actions)
-[![PyPI](https://img.shields.io/pypi/v/qontos.svg?logo=pypi&logoColor=white)](https://pypi.org/project/qontos/)
-
-An open-source Python SDK for modular quantum orchestration across external backends and future native QONTOS systems.
-
-[Installation](#installation) &middot;
-[Quick Start](#quick-start) &middot;
-[Architecture](#architecture) &middot;
-[Documentation](#documentation) &middot;
-[Examples](https://github.com/qontos/qontos-examples) &middot;
-[Contributing](#contributing) &middot;
-[Citing QONTOS](#citing-qontos)
-
+  <p>
+    <a href="#overview">Overview</a> &middot;
+    <a href="#installation">Installation</a> &middot;
+    <a href="#quick-start">Quick Start</a> &middot;
+    <a href="#architecture">Architecture</a> &middot;
+    <a href="#documentation">Documentation</a> &middot;
+    <a href="https://github.com/qontos/qontos-examples">Examples</a> &middot;
+    <a href="#contributing">Contributing</a>
+  </p>
 </div>
 
 ---
 
-## What is QONTOS?
+## Overview
 
 QONTOS is the flagship Python SDK for modular quantum computing orchestration. It provides a unified developer interface for circuit ingestion, partitioning, scheduling, distributed execution, result aggregation, and execution integrity.
 
