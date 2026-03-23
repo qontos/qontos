@@ -1,0 +1,25 @@
+name: Doc Check
+
+on:
+  push:
+    branches: [main]
+    paths: ["**.md", "**.txt", "**.toml", "requirements.txt"]
+  pull_request:
+    branches: [main]
+    paths: ["**.md", "**.txt", "**.toml", "requirements.txt"]
+
+jobs:
+  doc-check:
+    name: Documentation Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch doc checker
+        run: |
+          curl -sSf -o check-repo-docs.sh \
+            "https://raw.githubusercontent.com/qontos/.github/main/scripts/check-repo-docs.sh"
+          chmod +x check-repo-docs.sh
+
+      - name: Run doc consistency check
+        run: bash check-repo-docs.sh .
