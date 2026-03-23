@@ -10,10 +10,10 @@ readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Ramesh Tamilselvan", email = "research@zhyra.xyz"},
+    {name = "Ramesh Tamilselvan", email = "rameshtamilselvan@gmail.com"},
 ]
 maintainers = [
-    {name = "QONTOS Quantum Technologies", email = "qontos@zhyra.xyz"},
+    {name = "QONTOS Quantum Technologies", email = "rameshtamilselvan@gmail.com"},
 ]
 keywords = [
     "quantum",
