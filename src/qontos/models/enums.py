@@ -66,3 +66,28 @@ class SchedulingPolicy(str, Enum):
     CHEAPEST_AVAILABLE = "cheapest_available"
     HIGHEST_FIDELITY = "highest_fidelity"
     HYBRID_SPLIT = "hybrid_split"
+
+
+class CircuitType(str, Enum):
+    """Type of quantum circuit by application domain."""
+    GENERAL = "general"
+    CHEMISTRY = "chemistry"
+    OPTIMIZATION = "optimization"
+    MACHINE_LEARNING = "machine_learning"
+    BENCHMARK = "benchmark"
+    ERROR_CORRECTION = "error_correction"
+
+
+class BackendType(str, Enum):
+    """Quantum backend hardware classification."""
+    SIMULATOR = "simulator"
+    HARDWARE = "hardware"
+    EMULATOR = "emulator"
+
+
+class AggregationMethod(str, Enum):
+    """Strategy used to merge distributed partition results."""
+    PASSTHROUGH = "passthrough"
+    TENSOR_PRODUCT = "tensor_product"
+    MARGINAL_RECONSTRUCTION = "marginal_reconstruction"
+    MARGINAL_RECONSTRUCTION_FALLBACK = "marginal_reconstruction_fallback"

@@ -1,7 +1,7 @@
-"""Behavioral tests for ResultAggregator.
+"""QGH-3006: Results, Integrity, and Proof Story — Aggregation behavior tests.
 
-Tests passthrough for single-partition results, independent (tensor product)
-merge of two non-entangled partitions, and fidelity estimation.
+Tests passthrough, independent tensor-product merge, entangled marginal
+reconstruction with fidelity penalties, and edge cases.
 """
 
 from __future__ import annotations
@@ -14,74 +14,49 @@ from qontos.results.aggregate import ResultAggregator
 
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Helpers
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
-def aggregator() -> ResultAggregator:
+def aggregator():
     return ResultAggregator()
 
 
-def make_partition_result(
+def _pr(
     partition_id: str = "job-p0",
     partition_index: int = 0,
     counts: dict[str, int] | None = None,
     shots: int = 1000,
-    exec_time: float = 100.0,
     cost: float = 0.0,
 ) -> PartitionResult:
+    counts = counts or {"00": 500, "11": 500}
     return PartitionResult(
         partition_id=partition_id,
         partition_index=partition_index,
         backend_id="sim-1",
         backend_name="local_aer",
         provider="local_simulator",
-        counts=counts or {"00": 500, "11": 500},
+        counts=counts,
         shots_completed=shots,
-        execution_time_ms=exec_time,
+        execution_time_ms=100.0,
         cost_usd=cost,
     )
 
 
-def make_single_partition_plan(job_id: str = "job-1") -> PartitionPlan:
-    return PartitionPlan(
-        job_id=job_id,
-        strategy="auto",
-        partitions=[
-            PartitionEntry(
-                partition_id=f"{job_id}-p0",
-                partition_index=0,
-                qubit_indices=[0, 1],
-                num_qubits=2,
-                gate_count=4,
-                depth=3,
-            )
-        ],
-    )
-
-
-def make_independent_two_partition_plan(job_id: str = "job-2") -> PartitionPlan:
-    """Two partitions with NO dependencies (independent)."""
+def _independent_plan(job_id: str = "job-ind") -> PartitionPlan:
     return PartitionPlan(
         job_id=job_id,
         strategy="greedy",
         partitions=[
             PartitionEntry(
-                partition_id=f"{job_id}-p0",
-                partition_index=0,
-                qubit_indices=[0, 1],
-                num_qubits=2,
-                gate_count=3,
-                depth=2,
+                partition_id=f"{job_id}-p0", partition_index=0,
+                qubit_indices=[0, 1], num_qubits=2, gate_count=3, depth=2,
                 qubit_mapping={0: 0, 1: 1},
             ),
             PartitionEntry(
-                partition_id=f"{job_id}-p1",
-                partition_index=1,
-                qubit_indices=[2, 3],
-                num_qubits=2,
-                gate_count=3,
-                depth=2,
+                partition_id=f"{job_id}-p1", partition_index=1,
+                qubit_indices=[2, 3], num_qubits=2, gate_count=3, depth=2,
                 qubit_mapping={2: 0, 3: 1},
             ),
         ],
@@ -90,223 +65,200 @@ def make_independent_two_partition_plan(job_id: str = "job-2") -> PartitionPlan:
     )
 
 
-def make_entangled_two_partition_plan(job_id: str = "job-3") -> PartitionPlan:
-    """Two partitions WITH dependency edges (entangled cut)."""
+def _entangled_plan(job_id: str = "job-ent", num_cuts: int = 1) -> PartitionPlan:
     return PartitionPlan(
         job_id=job_id,
         strategy="spectral",
         partitions=[
             PartitionEntry(
-                partition_id=f"{job_id}-p0",
-                partition_index=0,
-                qubit_indices=[0, 1],
-                num_qubits=2,
-                gate_count=5,
-                depth=4,
+                partition_id=f"{job_id}-p0", partition_index=0,
+                qubit_indices=[0, 1], num_qubits=2, gate_count=5, depth=4,
                 qubit_mapping={0: 0, 1: 1},
-                inter_module_gates=1,
-                boundary_qubits=[1],
+                inter_module_gates=num_cuts, boundary_qubits=[1],
             ),
             PartitionEntry(
-                partition_id=f"{job_id}-p1",
-                partition_index=1,
-                qubit_indices=[2, 3],
-                num_qubits=2,
-                gate_count=5,
-                depth=4,
+                partition_id=f"{job_id}-p1", partition_index=1,
+                qubit_indices=[2, 3], num_qubits=2, gate_count=5, depth=4,
                 qubit_mapping={2: 0, 3: 1},
-                inter_module_gates=1,
-                boundary_qubits=[2],
+                inter_module_gates=num_cuts, boundary_qubits=[2],
             ),
         ],
         dependencies=[
             DependencyEdge(
-                from_partition=f"{job_id}-p0",
-                to_partition=f"{job_id}-p1",
-                gate_name="cx",
-                shared_qubits=[1, 2],
+                from_partition=f"{job_id}-p0", to_partition=f"{job_id}-p1",
+                gate_name="cx", shared_qubits=[1, 2],
             )
         ],
-        total_inter_module_gates=1,
+        total_inter_module_gates=num_cuts,
     )
 
 
 # ---------------------------------------------------------------------------
-# Empty results
+# 1. Passthrough aggregation for single partition
 # ---------------------------------------------------------------------------
 
-class TestEmptyResults:
-    """Edge case: no partition results."""
 
-    def test_no_results_returns_failed(self, aggregator: ResultAggregator) -> None:
+class TestPassthroughAggregation:
+    def test_passthrough_status(self, aggregator):
+        result = aggregator.aggregate("job-1", [_pr(counts={"00": 600, "11": 400})])
+        assert result.status == "completed"
+
+    def test_passthrough_counts_match(self, aggregator):
+        counts = {"00": 600, "11": 400}
+        result = aggregator.aggregate("job-1", [_pr(counts=counts)])
+        assert result.final_counts == counts
+
+    def test_passthrough_shots(self, aggregator):
+        result = aggregator.aggregate("job-1", [_pr(shots=2048)])
+        assert result.total_shots == 2048
+
+    def test_passthrough_aggregation_method(self, aggregator):
+        result = aggregator.aggregate("job-1", [_pr()])
+        assert result.aggregation_method == "passthrough"
+
+    def test_passthrough_fidelity_is_one(self, aggregator):
+        result = aggregator.aggregate("job-1", [_pr()])
+        assert result.fidelity_estimate == 1.0
+
+    def test_passthrough_cost(self, aggregator):
+        result = aggregator.aggregate("job-1", [_pr(cost=0.5)])
+        assert result.cost_usd == 0.5
+
+
+# ---------------------------------------------------------------------------
+# 2. Independent merge (tensor product) for 2 partitions, no dependencies
+# ---------------------------------------------------------------------------
+
+
+class TestIndependentMerge:
+    def test_independent_merge_method(self, aggregator):
+        plan = _independent_plan()
+        pr0 = _pr(partition_id="job-ind-p0", partition_index=0, counts={"0": 500, "1": 500})
+        pr1 = _pr(partition_id="job-ind-p1", partition_index=1, counts={"0": 700, "1": 300})
+        result = aggregator.aggregate("job-ind", [pr0, pr1], plan)
+        assert result.aggregation_method == "tensor_product"
+
+    def test_independent_merge_fidelity_is_one(self, aggregator):
+        plan = _independent_plan()
+        pr0 = _pr(partition_id="job-ind-p0", partition_index=0, counts={"0": 800, "1": 200})
+        pr1 = _pr(partition_id="job-ind-p1", partition_index=1, counts={"0": 600, "1": 400})
+        result = aggregator.aggregate("job-ind", [pr0, pr1], plan)
+        assert result.fidelity_estimate == 1.0
+
+    def test_independent_merge_deterministic_counts(self, aggregator):
+        plan = _independent_plan()
+        pr0 = _pr(partition_id="job-ind-p0", partition_index=0, counts={"0": 1000})
+        pr1 = _pr(partition_id="job-ind-p1", partition_index=1, counts={"0": 1000})
+        result = aggregator.aggregate("job-ind", [pr0, pr1], plan)
+        assert "00" in result.final_counts
+        assert result.final_counts["00"] == 1000
+
+    def test_independent_merge_total_cost(self, aggregator):
+        plan = _independent_plan()
+        pr0 = _pr(partition_id="job-ind-p0", partition_index=0, cost=1.0, counts={"0": 100})
+        pr1 = _pr(partition_id="job-ind-p1", partition_index=1, cost=2.0, counts={"0": 100})
+        result = aggregator.aggregate("job-ind", [pr0, pr1], plan)
+        assert result.cost_usd == 3.0
+
+
+# ---------------------------------------------------------------------------
+# 3. Entangled merge applies fidelity penalty per cut gate
+# ---------------------------------------------------------------------------
+
+
+class TestEntangledMerge:
+    def test_entangled_merge_method(self, aggregator):
+        plan = _entangled_plan(num_cuts=1)
+        pr0 = _pr(partition_id="job-ent-p0", partition_index=0)
+        pr1 = _pr(partition_id="job-ent-p1", partition_index=1)
+        result = aggregator.aggregate("job-ent", [pr0, pr1], plan)
+        assert result.aggregation_method == "marginal_reconstruction"
+
+    def test_entangled_merge_fidelity_penalty_1_cut(self, aggregator):
+        plan = _entangled_plan(num_cuts=1)
+        pr0 = _pr(partition_id="job-ent-p0", partition_index=0)
+        pr1 = _pr(partition_id="job-ent-p1", partition_index=1)
+        result = aggregator.aggregate("job-ent", [pr0, pr1], plan)
+        # 1 cut * 0.02 penalty => 0.98
+        assert result.fidelity_estimate is not None
+        assert result.fidelity_estimate < 1.0
+        assert result.fidelity_estimate == pytest.approx(0.98, abs=0.01)
+
+    def test_entangled_merge_fidelity_penalty_5_cuts(self, aggregator):
+        plan = _entangled_plan(num_cuts=5)
+        pr0 = _pr(partition_id="job-ent-p0", partition_index=0)
+        pr1 = _pr(partition_id="job-ent-p1", partition_index=1)
+        result = aggregator.aggregate("job-ent", [pr0, pr1], plan)
+        # 5 cuts * 0.02 = 0.10 penalty => 0.90
+        assert result.fidelity_estimate == pytest.approx(0.90, abs=0.01)
+
+    def test_entangled_merge_metadata_warns(self, aggregator):
+        plan = _entangled_plan()
+        pr0 = _pr(partition_id="job-ent-p0", partition_index=0)
+        pr1 = _pr(partition_id="job-ent-p1", partition_index=1)
+        result = aggregator.aggregate("job-ent", [pr0, pr1], plan)
+        assert result.metadata.get("fidelity_degraded") is True
+
+
+# ---------------------------------------------------------------------------
+# 4. Aggregation method recorded in RunResult
+# ---------------------------------------------------------------------------
+
+
+class TestAggregationMethodRecorded:
+    def test_passthrough_recorded(self, aggregator):
+        result = aggregator.aggregate("j1", [_pr()])
+        assert result.aggregation_method == "passthrough"
+
+    def test_tensor_product_recorded(self, aggregator):
+        plan = _independent_plan("j2")
+        pr0 = _pr(partition_id="j2-p0", partition_index=0, counts={"0": 500, "1": 500})
+        pr1 = _pr(partition_id="j2-p1", partition_index=1, counts={"0": 500, "1": 500})
+        result = aggregator.aggregate("j2", [pr0, pr1], plan)
+        assert result.aggregation_method == "tensor_product"
+
+    def test_marginal_reconstruction_recorded(self, aggregator):
+        plan = _entangled_plan("j3")
+        pr0 = _pr(partition_id="j3-p0", partition_index=0)
+        pr1 = _pr(partition_id="j3-p1", partition_index=1)
+        result = aggregator.aggregate("j3", [pr0, pr1], plan)
+        assert result.aggregation_method == "marginal_reconstruction"
+
+
+# ---------------------------------------------------------------------------
+# 5. Fidelity estimate calculation
+# ---------------------------------------------------------------------------
+
+
+class TestFidelityEstimate:
+    def test_single_partition_perfect_fidelity(self, aggregator):
+        result = aggregator.aggregate("j", [_pr()])
+        assert result.fidelity_estimate == 1.0
+
+    def test_independent_perfect_fidelity(self, aggregator):
+        plan = _independent_plan("jf")
+        pr0 = _pr(partition_id="jf-p0", partition_index=0, counts={"0": 1000})
+        pr1 = _pr(partition_id="jf-p1", partition_index=1, counts={"0": 1000})
+        result = aggregator.aggregate("jf", [pr0, pr1], plan)
+        assert result.fidelity_estimate == 1.0
+
+
+# ---------------------------------------------------------------------------
+# 6. Empty partition results handled gracefully
+# ---------------------------------------------------------------------------
+
+
+class TestEmptyResults:
+    def test_no_results_returns_failed(self, aggregator):
         result = aggregator.aggregate("job-empty", [])
         assert result.status == "failed"
         assert result.total_shots == 0
         assert result.final_counts == {}
 
-
-# ---------------------------------------------------------------------------
-# Single partition passthrough
-# ---------------------------------------------------------------------------
-
-class TestSinglePartitionPassthrough:
-    """Single partition result is passed through directly."""
-
-    def test_passthrough_status(self, aggregator: ResultAggregator) -> None:
-        pr = make_partition_result(counts={"00": 600, "11": 400})
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.status == "completed"
-
-    def test_passthrough_counts_match(self, aggregator: ResultAggregator) -> None:
-        counts = {"00": 600, "11": 400}
-        pr = make_partition_result(counts=counts)
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.final_counts == counts
-
-    def test_passthrough_shots(self, aggregator: ResultAggregator) -> None:
-        pr = make_partition_result(shots=2048)
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.total_shots == 2048
-
-    def test_passthrough_aggregation_method(self, aggregator: ResultAggregator) -> None:
-        pr = make_partition_result()
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.aggregation_method == "passthrough"
-
-    def test_passthrough_fidelity(self, aggregator: ResultAggregator) -> None:
-        pr = make_partition_result()
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.fidelity_estimate == 1.0
-
-    def test_passthrough_cost(self, aggregator: ResultAggregator) -> None:
-        pr = make_partition_result(cost=0.5)
-        result = aggregator.aggregate("job-1", [pr])
-        assert result.cost_usd == 0.5
-
-
-# ---------------------------------------------------------------------------
-# Independent merge (tensor product)
-# ---------------------------------------------------------------------------
-
-class TestIndependentMerge:
-    """Two independent (non-entangled) partitions merged via tensor product."""
-
-    def test_independent_merge_status(self, aggregator: ResultAggregator) -> None:
-        plan = make_independent_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-2-p0", partition_index=0,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-2-p1", partition_index=1,
-                                     counts={"00": 700, "11": 300}, shots=1000)
-        result = aggregator.aggregate("job-2", [pr0, pr1], plan)
-        assert result.status == "completed"
-
-    def test_independent_merge_method(self, aggregator: ResultAggregator) -> None:
-        plan = make_independent_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-2-p0", partition_index=0,
-                                     counts={"0": 500, "1": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-2-p1", partition_index=1,
-                                     counts={"0": 700, "1": 300}, shots=1000)
-        result = aggregator.aggregate("job-2", [pr0, pr1], plan)
-        assert result.aggregation_method == "tensor_product"
-
-    def test_independent_merge_fidelity_is_one(self, aggregator: ResultAggregator) -> None:
-        plan = make_independent_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-2-p0", partition_index=0,
-                                     counts={"0": 800, "1": 200}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-2-p1", partition_index=1,
-                                     counts={"0": 600, "1": 400}, shots=1000)
-        result = aggregator.aggregate("job-2", [pr0, pr1], plan)
-        assert result.fidelity_estimate == 1.0
-
-    def test_independent_merge_counts_nonzero(self, aggregator: ResultAggregator) -> None:
-        plan = make_independent_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-2-p0", partition_index=0,
-                                     counts={"0": 1000}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-2-p1", partition_index=1,
-                                     counts={"0": 1000}, shots=1000)
-        result = aggregator.aggregate("job-2", [pr0, pr1], plan)
-        # Only possible combined outcome is "00"
-        assert "00" in result.final_counts
-        assert result.final_counts["00"] == 1000
-
-    def test_independent_merge_total_cost(self, aggregator: ResultAggregator) -> None:
-        plan = make_independent_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-2-p0", partition_index=0,
-                                     cost=1.0, shots=100, counts={"0": 100})
-        pr1 = make_partition_result(partition_id="job-2-p1", partition_index=1,
-                                     cost=2.0, shots=100, counts={"0": 100})
-        result = aggregator.aggregate("job-2", [pr0, pr1], plan)
-        assert result.cost_usd == 3.0
-
-
-# ---------------------------------------------------------------------------
-# Entangled merge
-# ---------------------------------------------------------------------------
-
-class TestEntangledMerge:
-    """Two entangled partitions with cut gates — uses marginal reconstruction."""
-
-    def test_entangled_merge_detects_strategy(self, aggregator: ResultAggregator) -> None:
-        plan = make_entangled_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-3-p0", partition_index=0,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-3-p1", partition_index=1,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        result = aggregator.aggregate("job-3", [pr0, pr1], plan)
-        assert result.aggregation_method == "marginal_reconstruction"
-
-    def test_entangled_merge_degraded_fidelity(self, aggregator: ResultAggregator) -> None:
-        plan = make_entangled_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-3-p0", partition_index=0,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-3-p1", partition_index=1,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        result = aggregator.aggregate("job-3", [pr0, pr1], plan)
-        # 1 inter-module gate, penalty of 0.02 per gate
-        assert result.fidelity_estimate is not None
-        assert result.fidelity_estimate < 1.0
-        assert result.fidelity_estimate == pytest.approx(0.98, abs=0.01)
-
-    def test_entangled_merge_produces_counts(self, aggregator: ResultAggregator) -> None:
-        plan = make_entangled_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-3-p0", partition_index=0,
-                                     counts={"00": 800, "11": 200}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-3-p1", partition_index=1,
-                                     counts={"00": 900, "11": 100}, shots=1000)
-        result = aggregator.aggregate("job-3", [pr0, pr1], plan)
-        assert len(result.final_counts) > 0
-        assert result.total_shots > 0
-
-    def test_entangled_merge_metadata_warns(self, aggregator: ResultAggregator) -> None:
-        plan = make_entangled_two_partition_plan()
-        pr0 = make_partition_result(partition_id="job-3-p0", partition_index=0,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="job-3-p1", partition_index=1,
-                                     counts={"00": 500, "11": 500}, shots=1000)
-        result = aggregator.aggregate("job-3", [pr0, pr1], plan)
-        assert result.metadata.get("fidelity_degraded") is True
-
-
-# ---------------------------------------------------------------------------
-# Fallback merge (no plan)
-# ---------------------------------------------------------------------------
-
-class TestFallbackMerge:
-    """Two partitions without a plan — conservative fallback."""
-
-    def test_fallback_merge_low_fidelity(self, aggregator: ResultAggregator) -> None:
-        pr0 = make_partition_result(partition_id="p0", partition_index=0,
-                                     counts={"0": 1000}, shots=1000)
-        pr1 = make_partition_result(partition_id="p1", partition_index=1,
-                                     counts={"0": 1000}, shots=1000)
+    def test_fallback_merge_no_plan(self, aggregator):
+        pr0 = _pr(partition_id="p0", partition_index=0, counts={"0": 1000})
+        pr1 = _pr(partition_id="p1", partition_index=1, counts={"0": 1000})
         result = aggregator.aggregate("job-fb", [pr0, pr1], partition_plan=None)
         assert result.fidelity_estimate is not None
         assert result.fidelity_estimate <= 0.5
-
-    def test_fallback_merge_method(self, aggregator: ResultAggregator) -> None:
-        pr0 = make_partition_result(partition_id="p0", partition_index=0,
-                                     counts={"0": 500, "1": 500}, shots=1000)
-        pr1 = make_partition_result(partition_id="p1", partition_index=1,
-                                     counts={"0": 500, "1": 500}, shots=1000)
-        result = aggregator.aggregate("job-fb", [pr0, pr1], partition_plan=None)
         assert "fallback" in result.aggregation_method
