@@ -21,23 +21,31 @@ jobs:
           set -euo pipefail
 
           if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            # PR: compare against base branch
             git fetch origin "${GITHUB_BASE_REF}" --depth=1
             RANGE="origin/${GITHUB_BASE_REF}..HEAD"
-          elif [ "${GITHUB_EVENT_BEFORE}" = "0000000000000000000000000000000000000000" ]; then
-            RANGE="${GITHUB_SHA}"
           else
-            RANGE="${GITHUB_EVENT_BEFORE}..${GITHUB_SHA}"
+            # Push: extract 'before' from event payload (safe for first push, force push)
+            BEFORE="$(jq -r '.before // "0000000000000000000000000000000000000000"' "${GITHUB_EVENT_PATH}")"
+            if [ "${BEFORE}" = "0000000000000000000000000000000000000000" ] || [ "${BEFORE}" = "null" ]; then
+              # First push or force push with no prior ref — check only the pushed commit
+              RANGE="${GITHUB_SHA}"
+            else
+              RANGE="${BEFORE}..${GITHUB_SHA}"
+            fi
           fi
+
+          echo "Checking commits in range: ${RANGE}"
 
           BAD_COMMITS="$(
             git log --format='%H%x09%an%x09%ae%x09%cn%x09%ce' "${RANGE}" \
             | awk -F '\t' -v email="${REQUIRED_EMAIL}" '$3 != email || $5 != email {print}'
-          )"
+          )" || true
 
           if [ -n "${BAD_COMMITS}" ]; then
-            echo "The following commits do not use the required email (${REQUIRED_EMAIL}):"
+            echo "::error::The following commits do not use the required email (${REQUIRED_EMAIL}):"
             echo "${BAD_COMMITS}"
             exit 1
           fi
 
-          echo "All commits in ${RANGE} use ${REQUIRED_EMAIL} for both author and committer."
+          echo "✓ All commits in ${RANGE} use ${REQUIRED_EMAIL} for both author and committer."
