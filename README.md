@@ -1,7 +1,8 @@
-<!-- Logo placeholder — replace with actual logo when available -->
 <div align="center">
 
-# QONTOS
+<img src="assets/qontos-logo.png" alt="QONTOS" width="400">
+
+<br>
 
 **Quantum Orchestrated Network for Transformative Optimization Systems**
 
@@ -9,7 +10,6 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![CI](https://img.shields.io/github/actions/workflow/status/qontos/qontos/ci.yml?branch=main&label=CI&logo=github)](https://github.com/qontos/qontos/actions)
 [![PyPI](https://img.shields.io/pypi/v/qontos.svg?logo=pypi&logoColor=white)](https://pypi.org/project/qontos/)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.XXXXXXX-blue.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 
 An open-source Python SDK for distributed quantum circuit orchestration across multiple backends.
 
@@ -27,7 +27,9 @@ An open-source Python SDK for distributed quantum circuit orchestration across m
 
 ## What is QONTOS?
 
-QONTOS is a **hardware-agnostic quantum computing orchestration SDK** that handles the full lifecycle of quantum circuit execution:
+QONTOS is the flagship Python SDK for modular quantum computing orchestration. It provides a unified developer interface for circuit ingestion, partitioning, scheduling, distributed execution, result aggregation, and execution integrity.
+
+The SDK interoperates with external providers today and is designed to become the software interface for future native QONTOS modular quantum hardware.
 
 1. **Ingest** circuits in any format (OpenQASM 2.0/3.0, Qiskit, PennyLane)
 2. **Partition** large circuits across quantum modules using graph-based algorithms
@@ -35,8 +37,6 @@ QONTOS is a **hardware-agnostic quantum computing orchestration SDK** that handl
 4. **Execute** across multiple providers simultaneously (IBM Quantum, Amazon Braket, simulators)
 5. **Aggregate** distributed results with mathematically grounded reconstruction
 6. **Verify** execution integrity with a three-layer SHA-256 cryptographic proof chain
-
-No other quantum SDK does all six.
 
 ## Installation
 
