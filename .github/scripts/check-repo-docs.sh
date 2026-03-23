@@ -9,10 +9,11 @@ set -euo pipefail
 BASE="${1:-.}"
 ERRORS=0
 
-# Build file list: .md, .txt (including requirements.txt), .toml
-FILES=$(find "$BASE" -maxdepth 3 \
-    \( -name '*.md' -o -name '*.txt' -o -name '*.toml' -o -name 'requirements*.txt' \) \
-    -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null | sort -u || true)
+# Build file list: .md, .txt, .toml, .ipynb (notebooks contain install guidance too)
+FILES=$(find "$BASE" -maxdepth 4 \
+    \( -name '*.md' -o -name '*.txt' -o -name '*.toml' -o -name '*.ipynb' -o -name 'requirements*.txt' \) \
+    -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*_executed*' \
+    2>/dev/null | sort -u || true)
 
 FILE_COUNT=$(echo "$FILES" | grep -c . || echo 0)
 
