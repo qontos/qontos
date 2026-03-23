@@ -9,10 +9,13 @@ set -euo pipefail
 BASE="${1:-.}"
 ERRORS=0
 
-# Build file list: .md, .txt, .toml, .ipynb (notebooks contain install guidance too)
+# Build file list: .md, .txt, .toml, .ipynb (notebooks contain install guidance too).
+# Excludes: .git, node_modules, executed notebook outputs, and negative test fixtures
+# (doc-check-fixtures/ contains intentional bad patterns for self-testing).
 FILES=$(find "$BASE" -maxdepth 4 \
     \( -name '*.md' -o -name '*.txt' -o -name '*.toml' -o -name '*.ipynb' -o -name 'requirements*.txt' \) \
     -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*_executed*' \
+    -not -path '*/doc-check-fixtures/*' \
     2>/dev/null | sort -u || true)
 
 FILE_COUNT=$(echo "$FILES" | grep -c . || echo 0)
