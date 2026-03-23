@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use QONTOS in your research, please cite it as below."
+title: "QONTOS: Quantum Orchestrated Network for Transformative Optimization Systems"
+type: software
+authors:
+  - family-names: Tamilselvan
+    given-names: Ramesh
+    affiliation: "Zhyra Quantum Research Institute (ZQRI)"
+    email: research@zhyra.xyz
+repository-code: "https://github.com/qontos/qontos"
+url: "https://qontos.io"
+license: Apache-2.0
+version: 0.1.0
+date-released: "2026-03-23"
+keywords:
+  - quantum computing
+  - orchestration
+  - circuit partitioning
+  - multi-provider
+  - fault-tolerant
+  - modular architecture
+abstract: >-
+  QONTOS is a distributed quantum computing orchestration platform
+  that abstracts multi-backend quantum execution behind a single API.
+  It provides circuit ingestion, AI-driven partitioning, capability-aware
+  scheduling, multi-provider execution, result aggregation, and
+  cryptographic execution proofs.

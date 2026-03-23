@@ -1,0 +1,130 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qontos"
+version = "0.1.0"
+description = "Distributed quantum computing orchestration SDK"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Ramesh Tamilselvan", email = "research@zhyra.xyz"},
+]
+maintainers = [
+    {name = "QONTOS Quantum Technologies", email = "qontos@zhyra.xyz"},
+]
+keywords = [
+    "quantum",
+    "computing",
+    "orchestration",
+    "circuit",
+    "partitioning",
+    "scheduling",
+    "qiskit",
+    "braket",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+ibm = [
+    "qiskit>=1.0",
+    "qiskit-ibm-runtime>=0.20",
+]
+braket = [
+    "amazon-braket-sdk>=1.60",
+]
+sim = [
+    "qiskit>=1.0",
+    "qiskit-aer>=0.13",
+]
+all = [
+    "qontos[ibm,braket,sim]",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.8",
+    "ruff>=0.4",
+    "build>=1.0",
+]
+
+[project.urls]
+Homepage = "https://qontos.io"
+Documentation = "https://docs.qontos.io"
+Repository = "https://github.com/qontos/qontos"
+Issues = "https://github.com/qontos/qontos/issues"
+Changelog = "https://github.com/qontos/qontos/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "RUF",    # ruff-specific rules
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["qontos"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["qiskit.*", "braket.*", "pennylane.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "ibm: requires IBM Quantum credentials",
+    "braket: requires Amazon Braket credentials",
+]
+
+[tool.coverage.run]
+source = ["qontos"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80

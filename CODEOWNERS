@@ -1,0 +1,23 @@
+# QONTOS Code Owners
+# These owners will be automatically requested for review on PRs.
+
+# Default owner for everything
+* @ramtamilselvan
+
+# Core SDK
+/src/qontos/ @ramtamilselvan
+
+# Models and schemas
+/src/qontos/models/ @ramtamilselvan
+
+# Circuit processing
+/src/qontos/circuit/ @ramtamilselvan
+
+# Partitioning engine
+/src/qontos/partitioning/ @ramtamilselvan
+
+# Scheduling engine
+/src/qontos/scheduling/ @ramtamilselvan
+
+# CI/CD
+/.github/ @ramtamilselvan
