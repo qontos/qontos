@@ -169,7 +169,7 @@ QONTOS works with external providers today, while the SDK and execution model ar
 ### Package Layout
 
 | Module | Purpose |
-|---|---|
+| --- | --- |
 | `qontos.circuit` | Multi-format circuit ingestion and normalization |
 | `qontos.models` | Pydantic v2 data models for circuits, partitions, results, proofs |
 | `qontos.partitioning` | Graph-based circuit partitioning (greedy, spectral, manual) |
@@ -180,7 +180,7 @@ QONTOS works with external providers today, while the SDK and execution model ar
 ### Partitioning Strategies
 
 | Strategy | Complexity | Best For |
-|---|---|---|
+| --- | --- | --- |
 | `GreedyPartitioner` | O(n) | Circuits < 20 qubits, fast iteration |
 | `SpectralPartitioner` | O(n log n) | Larger circuits, minimizes inter-partition gates |
 | `ManualPartitioner` | O(1) | User-specified qubit-to-module mapping |
@@ -190,7 +190,7 @@ Strategy is auto-selected based on circuit size. Override via `PartitionConstrai
 ### Scheduling Weights
 
 | Factor | Default Weight | Description |
-|---|---|---|
+| --- | --- | --- |
 | Fidelity | 0.60 | Backend gate fidelity match |
 | Queue depth | 0.15 | Backend availability |
 | Cost | 0.10 | Normalized cost-per-shot |
@@ -201,7 +201,7 @@ Configurable per-policy via `ScoringWeights`.
 ## Supported Formats
 
 | Format | Input | Notes |
-|---|---|---|
+| --- | --- | --- |
 | OpenQASM 2.0 | `str` | Parsed via Qiskit |
 | OpenQASM 3.0 | `str` | Parsed via `qiskit.qasm3` |
 | Qiskit | `QuantumCircuit` | Native support |
@@ -210,7 +210,7 @@ Configurable per-policy via `ScoringWeights`.
 ## Supported Backends
 
 | Backend | Package | Provider |
-|---|---|---|
+| --- | --- | --- |
 | Qiskit Aer (Simulator) | `qontos` | Local |
 | IBM Quantum | `qontos[ibm]` | IBM |
 | Amazon Braket | `qontos[braket]` | AWS |
@@ -253,7 +253,7 @@ class MyExecutor:
 ## Related Repositories
 
 | Repository | Description |
-|------------|-------------|
+| --- | --- |
 | [qontos](https://github.com/qontos/qontos) | Flagship Python SDK |
 | [qontos-sim](https://github.com/qontos/qontos-sim) | Simulators and digital twin |
 | [qontos-examples](https://github.com/qontos/qontos-examples) | Tutorials and examples |
