@@ -32,7 +32,7 @@ from qontos.exceptions import (
     ServerError,
     TimeoutError,
 )
-from qontos.models import (
+from qontos.sdk_models import (
     Backend,
     CalibrationData,
     CompiledCircuit,

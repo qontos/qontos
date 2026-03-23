@@ -37,7 +37,7 @@ from qontos.exceptions import (
     TimeoutError,
     ValidationError,
 )
-from qontos.models import (
+from qontos.sdk_models import (
     Backend,
     CalibrationData,
     CompiledCircuit,
