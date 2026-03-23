@@ -40,17 +40,21 @@ The SDK interoperates with external providers today and is designed to become th
 
 ## Installation
 
-```bash
-pip install qontos
-```
-
-For quantum backend support:
+### Pre-release (current)
 
 ```bash
-pip install "qontos[ibm]"       # IBM Quantum via Qiskit
-pip install "qontos[braket]"    # Amazon Braket
-pip install "qontos[all]"       # Everything
+pip install git+https://github.com/qontos/qontos.git@v0.2.0
 ```
+
+### Optional backend support
+
+```bash
+pip install "qontos[ibm] @ git+https://github.com/qontos/qontos.git@v0.2.0"
+pip install "qontos[braket] @ git+https://github.com/qontos/qontos.git@v0.2.0"
+pip install "qontos[all] @ git+https://github.com/qontos/qontos.git@v0.2.0"
+```
+
+> **Note**: Once published to PyPI, installation will simplify to `pip install qontos`.
 
 Requires Python 3.10 or later.
 
