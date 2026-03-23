@@ -9,13 +9,16 @@ set -euo pipefail
 BASE="${1:-.}"
 ERRORS=0
 
-# Build file list: all .md, .txt, .toml in repo (not .git or node_modules)
+# Build file list: .md, .txt (including requirements.txt), .toml
 FILES=$(find "$BASE" -maxdepth 3 \
-    \( -name '*.md' -o -name '*.txt' -o -name '*.toml' \) \
-    -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null || true)
+    \( -name '*.md' -o -name '*.txt' -o -name '*.toml' -o -name 'requirements*.txt' \) \
+    -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null | sort -u || true)
+
+FILE_COUNT=$(echo "$FILES" | grep -c . || echo 0)
 
 echo "QONTOS Per-Repo Doc Check (v2)"
 echo "==============================="
+echo "Scanning $FILE_COUNT files"
 
 # Check 1: No non-canonical security emails
 echo ""
