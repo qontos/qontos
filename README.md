@@ -11,7 +11,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/qontos/qontos/ci.yml?branch=main&label=CI&logo=github)](https://github.com/qontos/qontos/actions)
 [![PyPI](https://img.shields.io/pypi/v/qontos.svg?logo=pypi&logoColor=white)](https://pypi.org/project/qontos/)
 
-An open-source Python SDK for distributed quantum circuit orchestration across multiple backends.
+An open-source Python SDK for modular quantum orchestration across external backends and future native QONTOS systems.
 
 [Installation](#installation) &middot;
 [Quick Start](#quick-start) &middot;
@@ -122,33 +122,39 @@ print(f"Proof hash: {proof.proof_hash}")
 ## Architecture
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                     User Application                        │
-│              (Qiskit / PennyLane / OpenQASM)                │
-└──────────────────────────┬─────────────────────────────────┘
-                           │
-┌──────────────────────────▼─────────────────────────────────┐
-│                     qontos SDK                              │
-│                                                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Circuit   │  │Partition │  │ Schedule │  │ Integrity│   │
-│  │ Ingest    │→ │ Engine   │→ │ Engine   │  │ Proofs   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-│                                     │                       │
-│  ┌──────────────────────────────────▼──────────────────┐   │
-│  │              Backend Executors                        │   │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌───────┐  │   │
-│  │  │IBM      │  │ Braket  │  │Simulator│  │Custom │  │   │
-│  │  │Quantum  │  │         │  │  (Aer)  │  │       │  │   │
-│  │  └─────────┘  └─────────┘  └─────────┘  └───────┘  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                           │                                 │
-│  ┌────────────────────────▼────────────────────────────┐   │
-│  │            Result Aggregator                         │   │
-│  │  Passthrough │ Independent │ Entangled Merge         │   │
-│  └─────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                         User Application                            │
+│                  (Qiskit / PennyLane / OpenQASM)                   │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│                            qontos SDK                              │
+│                                                                    │
+│  ┌──────────┐  ┌────────────┐  ┌────────────┐  ┌──────────────┐   │
+│  │ Circuit   │→ │ Partition   │→ │ Execution   │→ │ Result +      │   │
+│  │ Ingest    │  │ Planning    │  │ Routing     │  │ Integrity     │   │
+│  │           │  │             │  │ + Scheduling│  │ Verification  │   │
+│  └──────────┘  └────────────┘  └────────────┘  └──────────────┘   │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+          ┌────────────────────┴────────────────────┐
+          │                                         │
+┌─────────▼──────────────────────┐     ┌────────────▼────────────────────────┐
+│      External Execution Plane   │     │      Native QONTOS Execution Plane │
+│                                  │     │              (future)              │
+│  IBM Quantum  │  Braket          │     │  Modular QPUs  │  Control Stack    │
+│  Simulators   │  Custom Adapter  │     │  FTQC Runtime  │  Interconnects    │
+└─────────┬───────────────────────┘     └────────────┬────────────────────────┘
+          │                                          │
+          └────────────────────┬─────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│                       Unified QONTOS Outcome                        │
+│            Partition outcomes, aggregation, and proof chain         │
+└────────────────────────────────────────────────────────────────────┘
 ```
+
+QONTOS works with external providers today, while the SDK and execution model are being shaped to serve future native QONTOS modular quantum hardware through the same circuit, partitioning, scheduling, and verification surface.
 
 ### Package Layout
 
@@ -198,6 +204,7 @@ Configurable per-policy via `ScoringWeights`.
 | Qiskit Aer (Simulator) | `qontos` | Local |
 | IBM Quantum | `qontos[ibm]` | IBM |
 | Amazon Braket | `qontos[braket]` | AWS |
+| Native QONTOS Systems | planned | Future native execution target |
 | Custom | Implement `ExecutorContract` | Any |
 
 ### Building a Custom Executor
