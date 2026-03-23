@@ -1,0 +1,43 @@
+name: Verify Commit Identity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify author and committer email
+        shell: bash
+        env:
+          REQUIRED_EMAIL: rameshtamilselvan@gmail.com
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            git fetch origin "${GITHUB_BASE_REF}" --depth=1
+            RANGE="origin/${GITHUB_BASE_REF}..HEAD"
+          elif [ "${GITHUB_EVENT_BEFORE}" = "0000000000000000000000000000000000000000" ]; then
+            RANGE="${GITHUB_SHA}"
+          else
+            RANGE="${GITHUB_EVENT_BEFORE}..${GITHUB_SHA}"
+          fi
+
+          BAD_COMMITS="$(
+            git log --format='%H%x09%an%x09%ae%x09%cn%x09%ce' "${RANGE}" \
+            | awk -F '\t' -v email="${REQUIRED_EMAIL}" '$3 != email || $5 != email {print}'
+          )"
+
+          if [ -n "${BAD_COMMITS}" ]; then
+            echo "The following commits do not use the required email (${REQUIRED_EMAIL}):"
+            echo "${BAD_COMMITS}"
+            exit 1
+          fi
+
+          echo "All commits in ${RANGE} use ${REQUIRED_EMAIL} for both author and committer."
