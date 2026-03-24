@@ -9,6 +9,7 @@ This page is the lightweight docs hub for the flagship `qontos` SDK. Use it to f
 | [README.md](../README.md) | Primary product overview, installation, quick start, and architecture |
 | [api-surface.md](api-surface.md) | Intentional stable public API surface for the current SDK version |
 | [Public Registry](https://github.com/qontos/.github/blob/main/docs/public-registry.md) | Shared map across the full public QONTOS ecosystem |
+| [Release & Install Policy](https://github.com/qontos/.github/blob/main/docs/release-install-policy.md) | Canonical install and release guidance for the public QONTOS repos |
 | [Examples Repo](https://github.com/qontos/qontos-examples) | Runnable notebooks and scripts using the SDK |
 
 ## Core Docs

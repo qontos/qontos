@@ -39,6 +39,7 @@ QONTOS is the flagship Python SDK for modular quantum computing orchestration. I
 The SDK interoperates with external providers today and is designed to become the software interface for future native QONTOS modular quantum hardware.
 
 Start with [docs/index.md](docs/index.md) for the lightweight docs hub and links into the broader public QONTOS ecosystem.
+For the canonical install and release policy across the public repos, use [the shared policy](https://github.com/qontos/.github/blob/main/docs/release-install-policy.md).
 
 1. **Ingest** circuits in any format (OpenQASM 2.0/3.0, Qiskit, PennyLane)
 2. **Partition** large circuits across quantum modules using graph-based algorithms
